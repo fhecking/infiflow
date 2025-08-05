@@ -1,0 +1,78 @@
+@startuml umfuhr_wf_seq
+actor Benutzer
+participant IMI800
+participant GI200
+participant GI100OK
+participant OB500OK
+participant OB100OK
+participant IPC020
+
+' IMI800 - Bestandsübernahme
+Benutzer -> IMI800: Anlage von Bestand starten
+IMI800 -> IMI800: Auswahl Bereich und Platz\n(z.B. B21RNL, G01_R1_F01_E10_K3_Z1)
+IMI800 -> IMI800: Menge wählen
+IMI800 -> IMI800: Prüfe Menge\n(Hinweis im Fehlertab bei Übermenge)
+Benutzer -> IMI800: Bestand buchen ("buchen"-Button)
+IMI800 -> IMI800: Ladeeinheit wird zugeordnet
+
+' GI200 - Auftragserfassung
+Benutzer -> GI200: Auftrag anlegen
+GI200 -> GI200: Datensatz füllen (Klient=FBO,\nAuftragstyp=UMF,\nKunde=B2BUMF4)
+Benutzer -> GI200: Auftragsposition anlegen
+GI200 -> IMI800: Artikel aus Bestand wählen
+GI200 -> GI200: Prüfe Mengenübereinstimmung
+Benutzer -> GI200: Abschluss Erfassung ("Abschluss Erfassung"-Button)
+GI200 -> Benutzer: AuftragsId kopieren
+
+' GI100OK - Auftragsübersicht
+Benutzer -> GI100OK: Auftrag suchen
+GI100OK -> GI100OK: Status prüfen (02, 10, 34)
+alt Status = 25 (Fehler Reservierung)
+    GI100OK -> IMI800: Neuen Bestand anlegen und erneut freigeben
+end
+GI100OK -> GI100OK: Prüfen, ob Status "34 - klassifiziert"
+
+' OB500OK - Manuelle Batchbildung
+Benutzer -> OB500OK: Batchbildung starten
+OB500OK -> OB500OK: Batchtyp auf "UMF" setzen\n(Hinweis: vordefinierte Batchbildung)
+OB500OK -> OB500OK: Im Feld "dyn. SQL" auf Auftrag filtern
+Benutzer -> OB500OK: "Vorschau" klicken
+OB500OK -> OB500OK: Daten prüfen und bestätigen
+
+' OB100OK - Batch-Übersicht
+Benutzer -> OB100OK: Batch prüfen
+OB100OK -> OB100OK: Prüfen, ob Status "20 - Warte auf Freigabe"
+Benutzer -> OB100OK: Batch freigeben ("Freigabe Batch"-Button)
+OB100OK -> OB100OK: Status wechselt auf "30 - Batch freigegeben"
+
+' IPC020 - Server Konfigurationen
+Benutzer -> IPC020: Server MFC_CTT_IMPORT auswählen
+Benutzer -> IPC020: "Nachricht senden" klicken
+Benutzer -> IPC020: Prozresstyp=MFC_CTT_PROCESS_TAQ auswählen
+Benutzer -> IPC020: Konfiguriertes JSON einfügen
+note right of IPC020
+  JSON-Konfiguration:
+  <code>
+  {
+    "TAQ": [
+      {
+        "Transportnummer": "030000004400",
+        "LENr": "220000115232",
+        "Zieladresse": "B41FBL_BF411",
+        "Gewicht": 1800,
+        "Erreichbarkeit": 1,
+        "Nio": [],
+        "Status": 2,
+        "LETyp": "RMW",
+        "LeerKZ": 1,
+        "Klasse": null,
+        "SQ": null,
+        "LoopCount": 0,
+        "MaxLoopCount": 3
+      }
+    ]
+  }
+  </code>
+end note
+
+@enduml

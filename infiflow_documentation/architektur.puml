@@ -1,0 +1,17 @@
+@startuml basic_architektur
+actor User
+node "Frontend (json-editor)" as FE
+node "Workflow-Service"
+node "Beschreibung-Service"
+node "Bild-Service"
+queue "RabbitMQ"
+
+User -> FE: Interaktion
+FE -> "Workflow-Service": Workflow anlegen/abrufen
+FE -> "Beschreibung-Service": Beschreibung speichern/abrufen
+FE -> "Bild-Service": Bild hochladen/abrufen
+
+"Workflow-Service" -down-> RabbitMQ: WorkflowCreated
+"Beschreibung-Service" -down-> RabbitMQ: DescriptionAdded
+"Bild-Service" -down-> RabbitMQ: ImageAdded
+@enduml

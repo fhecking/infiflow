@@ -1,0 +1,62 @@
+@startuml Avisierung_Seq
+
+actor Benutzer
+participant AV200
+participant AV100
+participant AV102
+participant GR300OK
+participant TM200
+participant CPGR100OK
+participant GR350OK
+
+' AV200 - Manuelle Avisanlage
+Benutzer -> AV200: Avis manuell anlegen
+AV200 -> AV200: Template kopieren ("Externe Tournummer"=MUSTER BUID)
+Benutzer -> AV200: Externe Tournummer eingeben
+Benutzer -> AV200: Artikel anlegen
+Benutzer -> AV200: Artikelmenge anpassen
+Benutzer -> AV200: UUID für "Referenz 1" angeben
+Benutzer -> AV200: "Abschluss Erfassen" drücken
+
+' AV100 - Avisübersicht
+Benutzer -> AV100: Avisübersicht prüfen
+AV100 -> AV100: Status="10 - angelegt" prüfen
+
+' AV102 - Avispositionen
+Benutzer -> AV102: Avispositionen prüfen
+AV102 -> AV102: Status="10 - angelegt" prüfen
+
+' GR300OK - Lieferscheinerfassung
+Benutzer -> GR300OK: Lieferscheinerfassung starten
+GR300OK -> GR300OK: Arbeitsplatztyp=INBDEL prüfen (WC200)
+Benutzer -> GR300OK: Klient=FBO auswählen
+Benutzer -> GR300OK: "Neu" zur Anlieferung erfassen
+Benutzer -> GR300OK: "Neu" zur Verkehrsmitteleingabe
+Benutzer -> GR300OK: Fahrernahme=OPID eingeben
+Benutzer -> GR300OK: KFZ-Kennzeichen eingeben
+Benutzer -> GR300OK: Plombe eingeben (optional)
+Benutzer -> GR300OK: Neuware Sku-reine Kolli, Prio=09 auswählen
+Benutzer -> GR300OK: Palletieren -> "Weiter"
+Benutzer -> GR300OK: Einzelteilvereinnahmung -> "Weiter"
+Benutzer -> GR300OK: Toranlieferung auswählen
+Benutzer -> GR300OK: LieferscheinNr. und Datum eingeben
+Benutzer -> GR300OK: Lieferant auswählen (wie AV100)
+Benutzer -> GR300OK: Artikel und Menge eingeben
+Benutzer -> GR300OK: Zollstatus erfassen
+Benutzer -> GR300OK: Abschluss LS+VM
+
+' TM200 - Verkehrsmittel
+Benutzer -> TM200: Verkehrsmittel andocken
+TM200 -> TM200: Zeitpunkt Andocken setzen (Status="20 - angedockt")
+Benutzer -> TM200: Zeitpunkt Start setzen
+TM200 -> TM200: Status="30 - Bearbeitung gestartet"
+
+' CPGR100OK - Übersicht Anlieferungen und Hofzustand
+Benutzer -> CPGR100OK: Fortschritt mit Lieferscheinnummer überwachen
+CPGR100OK -> CPGR100OK: Tor prüfen
+
+' GR350OK - Entladung Verkehrsmittel
+Benutzer -> GR350OK: Datensatz mit Lieferscheinnummer auswählen
+Benutzer -> GR350OK: Entladung starten
+
+@enduml

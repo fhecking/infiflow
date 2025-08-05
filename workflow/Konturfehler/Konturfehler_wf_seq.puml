@@ -1,0 +1,68 @@
+@startuml TGW_KONTUR_Fehler_Seq
+
+actor Benutzer
+participant IM110
+participant TCS110
+participant IPC020
+participant NIO110OK
+participant CTT110OK
+
+' IM110 - Ladeeinheit
+Benutzer -> IM110: Ladeeinheit anlegen ("Neue LE")
+IM110 -> IM110: LE-Typ=N1-N7/RMW wählen, An-Platz=B11INB//PP001_ALL
+IM110 -> IM110: LE-Nr wird generiert
+Benutzer -> IM110: Ladeeinheit transportieren ("Transportieren")
+IM110 -> IM110: An-Platz=B21RNL//G00_R0_F00_E00_K0_Z0, Platzsuche=CTT-Shuttleplatzsuche OK
+
+' TCS110 - TLS-Aufträge
+Benutzer -> TCS110: TLS-Auftrag mit LE-Nummer finden
+Benutzer -> TCS110: JSON mit Werten zusammenbauen
+
+' IPC020 - Server Konfiguration
+Benutzer -> IPC020: Server "MFC_CTT_IMPORT" auswählen
+Benutzer -> IPC020: Nachricht mit Prozesstyp=MFC_CTT_PROCESS_TAQ und JSON senden
+note right of IPC020
+  JSON-Konfiguration:
+  <code>
+  {
+      "TAQ": [
+        {
+          "Transportnummer": "030000004478",
+          "LENr": "210100042026",
+          "Zieladresse": "B12SMU_MA001",
+          "Gewicht": null,
+          "Erreichbarkeit": 1,
+          "Nio": [
+            {
+              "NIOGrund": "KONTUR",
+              "Erlaeuterung": "(KONTUR)  ;  No LUs with invalid Dimesnions can be stored ..."
+            }
+          ],
+          "Status": 5,
+          "LETyp": "N2",
+          "LeerKZ": null,
+          "Klasse": null,
+          "SQ": null,
+          "LoopCount": 0,
+          "MaxLoopCount": 3
+        }
+      ]
+    }
+  </code>
+end note
+
+' NIO110OK - Differenzenklärung
+Benutzer -> NIO110OK: Prüfen, ob Fehlergrund erstellt wurde
+
+' TCS110 - TLS-Aufträge (Subsystem Auftrag)
+Benutzer -> TCS110: Mit Button "Subsystem Auftrag" in CTT110OK ausfliegen
+
+' CTT110OK - CTT-Aufträge
+Benutzer -> CTT110OK: Prüfen, abhängig von JSON, ob in "Ziele"
+alt Neuer Schritt erstellt
+    CTT110OK -> CTT110OK: Alter Schritt deaktiviert
+else Kein neuer Schritt
+    CTT110OK -> CTT110OK: Zum DIF-Platz gefahren
+end
+
+@enduml

@@ -1,0 +1,56 @@
+' @startuml test_flow
+' start
+' :Vorbereitungs-Workflow ausführen;
+' note right: Dies ist ein Pflicht-Workflow vor dem Hauptprozess
+
+
+' :User selects workflow;
+' :System loads workflow JSON;
+' if (Valid JSON?) then (yes)
+'   :Display editor;
+' else (no)
+'   :Show error;
+' endif
+' stop
+' @enduml
+
+' @startuml
+' start
+
+' :Workflow starten;
+' :JSON laden;
+' partition "Subworkflow: Konfiguration wählen" {
+'   :Konfiguration auswählen;
+'   :Validierung durchführen;
+'   :Konfiguration übernehmen;
+' }
+' :Weiter im Hauptworkflow;
+
+' stop
+' @enduml
+
+@startuml microservice_rabbitmq_architektur
+
+node "IMI800 Service" as IMI800
+node "GI200 Service" as GI200
+node "GI100OK Service" as GI100OK
+node "OB500OK Service" as OB500OK
+node "OB100OK Service" as OB100OK
+node "IPC020 Service" as IPC020
+queue "RabbitMQ" as MQ
+
+IMI800 -down-> MQ : Bestand erstellt\nBestand gebucht
+GI200 -down-> MQ : Auftrag angelegt\nAuftragsposition erstellt
+GI100OK -down-> MQ : Auftrag Status geändert
+OB500OK -down-> MQ : Batch gebildet
+OB100OK -down-> MQ : Batch freigegeben
+IPC020 -down-> MQ : Server-Konfiguration gesendet
+
+MQ -down-> IMI800 : Events/Commands (z.B. Fehler, Reservierung)
+MQ -down-> GI200 : Events/Commands (z.B. Auftrag freigegeben)
+MQ -down-> GI100OK : Events/Commands (z.B. Statusänderung)
+MQ -down-> OB500OK : Events/Commands (z.B. Batchbildung)
+MQ -down-> OB100OK : Events/Commands (z.B. Batchfreigabe)
+MQ -down-> IPC020 : Events/Commands (z.B. Konfiguration)
+
+@enduml

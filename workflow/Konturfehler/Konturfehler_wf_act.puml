@@ -1,0 +1,71 @@
+@startuml TGW_KONTUR_Fehler_Workflow
+
+start
+
+partition IM110 as "IM110 - Ladeeinheit" {
+  :Ladeeinheit anlegen ("Neue LE");
+  :LE-Typ=N1-N7 oder RMW wählen;
+  :An-Platz=B11INB//PP001_ALL wählen;
+  note right: LE-Nr wird generiert;\nGrund 1/2 LVS, Key nicht benötigt
+  :Ladeeinheit transportieren ("Transportieren");
+  :An-Platz=B21RNL//G00_R0_F00_E00_K0_Z0 wählen;
+  :Platzsuche=CTT-Shuttleplatzsuche OK;
+  note right: Priorität, Key, Referenz Subsystem nicht benötigt
+}
+
+partition TCS110 as "TCS110 - TLS-Aufträge" {
+  :TLS-Auftrag mit LE-Nummer finden;
+  :JSON mit Werten zusammenbauen;
+  note right
+    {
+      "TAQ": [
+        {
+          "Transportnummer": "030000004478",
+          "LENr": "210100042026",
+          "Zieladresse": "B12SMU_MA001",
+          "Gewicht": null,
+          "Erreichbarkeit": 1,
+          "Nio": [
+            {
+              "NIOGrund": "KONTUR",
+              "Erlaeuterung": "(KONTUR)  ;  No LUs with invalid Dimesnions can be stored ..."
+            }
+          ],
+          "Status": 5,
+          "LETyp": "N2",
+          "LeerKZ": null,
+          "Klasse": null,
+          "SQ": null,
+          "LoopCount": 0,
+          "MaxLoopCount": 3
+        }
+      ]
+    }
+  end note
+}
+
+partition IPC020 as "IPC020 - Server Konfiguration" {
+  :Server "MFC_CTT_IMPORT" auswählen;
+  :Nachricht mit Prozesstyp=MFC_CTT_PROCESS_TAQ und JSON senden;
+}
+
+partition NIO110OK as "NIO110OK - Differenzenklärung" {
+  :Prüfen, ob Fehlergrund erstellt wurde;
+}
+
+partition TCS110 as "TCS110 - TLS-Aufträge" {
+  :Mit Button "Subsystem Auftrag" in CTT110OK ausfliegen;
+}
+
+partition CTT110OK as "CTT110OK - CTT-Aufträge" {
+  :Prüfen, abhängig von JSON, ob in "Ziele";
+  if (neuer Schritt erstellt?) then (ja)
+    :Alter Schritt deaktiviert;
+  else (nein)
+    :Kein neuer Schritt, da zum DIF-Platz gefahren wird;
+  endif
+}
+
+stop
+
+@enduml

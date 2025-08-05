@@ -1,0 +1,81 @@
+@startuml umfuhr_wf_act
+
+start
+
+partition IMI800 as "IMI800 - Bestandsübernahme" {
+  :Anlage von Bestand;
+  :Auswahl Bereich und Platz;
+  note right: z.B. Bereich=B21RNL;\nPlatz=G01_R1_F01_E10_K3_Z1
+  :Menge wählen;
+  note right: Hinweis: Zu viel Menge -> Fehler im Fehlertab
+  :Bestand buchen ("buchen"-Button);
+  note right: Ladeeinheit wird zugeordnet
+}
+
+partition GI200 as "GI200 - Auftragserfassung" {
+  :Auftrag anlegen;
+  :Datensatz füllen (Klient=FBO,\nAuftragstyp=UMF,\nKunde=B2BUMF4);
+  :Auftragsposition anlegen;
+  :Artikel aus Bestand wählen;
+  note right: Mengen müssen übereinstimmen
+  :Abschluss Erfassung ("Abschluss Erfassung"-Button);
+  note right: AuftragsId kopieren für nächsten Schritt
+}
+
+partition GI100OK as "GI100OK - Auftragsübersicht" {
+  :Auftrag suchen;
+  :Status prüfen (02, 10, 34);
+  if (Status = 25 Fehler Reservierung?) then (ja)
+    :Neuen Bestand anlegen und erneut freigeben;
+  endif
+  :Prüfen, ob Status "34 - klassifiziert";
+}
+
+partition OB500OK as "OB500OK - Manuelle Batchbildung" {
+  :Batchbildung starten;
+  :Batchtyp auf "UMF" setzen;
+  note right: Führt zu vordefinierter Batchbildung
+  :Im Feld "dyn. SQL" auf Auftrag filtern;
+  :Vorschau klicken;
+  :Daten prüfen und bestätigen;
+}
+
+partition OB100OK as "OB100OK - Batch-Übersicht" {
+  :Batch prüfen;
+  :Prüfen, ob Status "20 - Warte auf Freigabe";
+  :Batch freigeben ("Freigabe Batch"-Button);
+  note right: Status wechselt auf "30 - Batch freigegeben"
+}
+
+partition IPC020 as "IPC020 - Server Konfigurationen" {
+  :Server MFC_CTT_IMPORT auswählen;
+  :Nachricht senden;
+  :Prozresstyp=MFC_CTT_PROCESS_TAQ auswählen;
+  :Konfiguriertes JSON einfügen;
+  note right
+    JSON-Konfiguration:
+    {
+      "TAQ": [
+        {
+          "Transportnummer": "030000004400",
+          "LENr": "220000115232",
+          "Zieladresse": "B41FBL_BF411",
+          "Gewicht": 1800,
+          "Erreichbarkeit": 1,
+          "Nio": [],
+          "Status": 2,
+          "LETyp": "RMW",
+          "LeerKZ": 1,
+          "Klasse": null,
+          "SQ": null,
+          "LoopCount": 0,
+          "MaxLoopCount": 3
+        }
+      ]
+    }
+  end note
+}
+
+stop
+
+@enduml
