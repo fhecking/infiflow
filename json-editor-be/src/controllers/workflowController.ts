@@ -18,7 +18,7 @@ export const listWorkflows = async (req: Request, res: Response) => {
 export const getWorkflowById = async (req: Request, res: Response) => {
   const { id } = req.params;
   logger.info("Fetching workflow for ID:", id);
-   await new Promise(resolve => setTimeout(resolve, 10000));
+   //await new Promise(resolve => setTimeout(resolve, 10000));
    logger.info("Workflow fetch delay complete");
 
   try {
